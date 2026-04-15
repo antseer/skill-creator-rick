@@ -67,7 +67,7 @@ skill-name/
 ```
 antskill-creator/
 ├── SKILL.md                  # 主控逻辑与决策树
-├── docs/                     # 产品 PRD + 包规范 + 指南
+├── docs/                     # 索引 + 产品 PRD + 包规范 + 指南
 ├── methodology/              # 范式、SoT、职责边界
 ├── sop/                      # S1–S6 阶段操作手册
 ├── prompts/                  # L1–L4 层设计指导
@@ -78,6 +78,8 @@ antskill-creator/
 
 ## 从这里开始
 
+- 文档索引：`docs/INDEX.md`
+- 快速上手：`docs/guides/quickstart.md`
 - 包结构标准：`docs/standards/package-standard.md`
 - 迁移指南：`docs/guides/migration-guide.md`
 - 示例编写指南：`docs/guides/example-authoring-guide.md`
