@@ -17,8 +17,8 @@
 - L2 过滤 / enrich / derive / score / rank / anomaly detect 已经基本成型
 - 静态元数据足够支持评分模型继续推进
 - LLM 挂掉时有 fallback
-- 前端 `implementation/implementation/frontend/yield-desk.html` 是很好的高保真产品原型
-- 当前 `implementation/implementation/tests/test_l2_scorer.py` 可通过（16/16）
+- 前端 `implementation/frontend/yield-desk.html` 是很好的高保真产品原型
+- 当前 `implementation/tests/test_l2_scorer.py` 可通过（16/16）
 
 ## Main engineering gaps
 
@@ -47,7 +47,7 @@
 
 ## Known issue fixed in this shared package
 
-- `implementation/implementation/pipeline/l1_implementation/data/fetcher.py` 的 Antseer dict → `RawProduct` 映射方式已做最小修正，避免 `hasattr(RawProduct, k)` 带来的字段过滤错误。
+- `implementation/pipeline/l1_data/fetcher.py` 的 Antseer dict → `RawProduct` 映射方式已做最小修正，避免 `hasattr(RawProduct, k)` 带来的字段过滤错误。
 - 但这不代表 Antseer 路径已完成，真实接口字段仍需工程确认。
 
 ## Suggested next owners
@@ -61,4 +61,4 @@
 把这个包分享给技术同事时，建议直接说明：
 
 > 这是一个“产品定义已经完成、工程还没收尾”的 skill 包。
-> 请优先看 `docs/review/docs/review/HANDOFF-REVIEW.md` 和 `docs/handoff/docs/handoff/TODO-TECH.md`，不要默认它已经能直接上线。
+> 请优先看 `docs/review/HANDOFF-REVIEW.md` 和 `docs/handoff/TODO-TECH.md`，不要默认它已经能直接上线。

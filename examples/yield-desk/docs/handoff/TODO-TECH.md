@@ -13,7 +13,7 @@
 
 | 端点 | 文件 | 说明 |
 |---|---|---|
-| `GET /api/v1/earn/products` | `implementation/implementation/pipeline/l1_implementation/data/sources/antseer.py` | 返回全部 CEX+DeFi Earn 产品，统一为 RawProduct Schema |
+| `GET /api/v1/earn/products` | `implementation/pipeline/l1_data/sources/antseer.py` | 返回全部 CEX+DeFi Earn 产品，统一为 RawProduct Schema |
 | `GET /api/v1/yield/history` | 同上 | 单池 30 日 APY 时序 |
 | `GET /api/v1/safety/meta` | 同上 | CEX+DeFi 安全元数据 (可选，也可用本地 YAML) |
 
@@ -25,7 +25,7 @@
 
 ### 🔴 1.2 CEX Earn API 直连 (Fallback)
 
-以下 5 家交易所的 Earn API 需要实现，代码在 `implementation/implementation/pipeline/l1_implementation/data/sources/cex_others.py`:
+以下 5 家交易所的 Earn API 需要实现，代码在 `implementation/pipeline/l1_data/sources/cex_others.py`:
 
 | 交易所 | 函数 | 状态 | 需要 |
 |---|---|---|---|
@@ -56,7 +56,7 @@
 
 ### 🟡 2.1 阶梯利率解析
 
-文件: `implementation/implementation/pipeline/l2_compute/compute.py` → `_find_tier_rate()`
+文件: `implementation/pipeline/l2_compute/compute.py` → `_find_tier_rate()`
 
 当前实现是简化版（取第一档），需要完善：
 - [ ] 解析 Binance 格式 `"0-5BTC": 0.05` → 根据用户本金找适用档
@@ -65,7 +65,7 @@
 
 ### 🟡 2.2 手续费解析
 
-文件: `implementation/implementation/pipeline/l2_compute/compute.py` → `_calc_convenience_score()`
+文件: `implementation/pipeline/l2_compute/compute.py` → `_calc_convenience_score()`
 
 当前手续费默认给 10 分（假设无手续费），需要：
 - [ ] 解析 `fees` dict 中的 subscribe/redeem/gas_est 为百分比
@@ -73,7 +73,7 @@
 
 ### 🟢 2.3 Pendle PT 锁仓天数
 
-`implementation/implementation/data/protocol_meta.yaml` 中 Pendle 标注了需要根据到期日动态计算 `lock_days`：
+`implementation/data/protocol_meta.yaml` 中 Pendle 标注了需要根据到期日动态计算 `lock_days`：
 - [ ] 在 `enrich()` 中，如果 `platform_slug == "pendle"`，从 DefiLlama pool 数据提取到期时间
 
 ---
@@ -82,7 +82,7 @@
 
 ### 🔴 3.1 Anthropic API Key
 
-文件: `implementation/implementation/pipeline/l3_decision/decision.py`
+文件: `implementation/pipeline/l3_decision/decision.py`
 
 - [ ] `ANTHROPIC_API_KEY` 需要从环境变量读取
 - [ ] 确认使用 Anthropic SDK 还是 httpx 直调（当前是 httpx）
@@ -90,7 +90,7 @@
 
 ### 🟡 3.2 Prompt 调优
 
-文件: `implementation/implementation/pipeline/l3_decision/prompt.md`
+文件: `implementation/pipeline/l3_decision/prompt.md`
 
 - [ ] 使用 `frontend/l3-decision-prompt-tuner.html` 调优工具跑完 4 个场景
 - [ ] 根据 Quality Checklist 结果调整 prompt
@@ -102,8 +102,8 @@
 
 ### 🟡 4.1 初始数据校验
 
-- [ ] `implementation/implementation/data/platform_meta.yaml` — 校验每家 CEX 的 tier / PoR 时间 / 审计信息
-- [ ] `implementation/implementation/data/protocol_meta.yaml` — 校验每个 DeFi 协议的审计列表 / 事件历史
+- [ ] `implementation/data/platform_meta.yaml` — 校验每家 CEX 的 tier / PoR 时间 / 审计信息
+- [ ] `implementation/data/protocol_meta.yaml` — 校验每个 DeFi 协议的审计列表 / 事件历史
 - [ ] 建立月度更新 SOP: 谁负责 / 数据来源 / 审批流程
 
 ### 🟢 4.2 自动化
@@ -117,7 +117,7 @@
 
 ### 🟡 5.1 Pipeline → 前端数据注入
 
-当前 `implementation/implementation/frontend/yield-desk.html` 使用硬编码 mock 数据。需要：
+当前 `implementation/frontend/yield-desk.html` 使用硬编码 mock 数据。需要：
 - [ ] 将 `orchestrator.py` 的输出 JSON 注入前端
 - [ ] 方式 A: 后端 API 返回 JSON，前端 fetch
 - [ ] 方式 B: 在 Skill 执行环境中，Python 输出 JSON → 前端模板替换
@@ -134,7 +134,7 @@
 
 ### 🟡 6.1 L2 单测
 
-文件: `implementation/implementation/tests/test_l2_scorer.py`
+文件: `implementation/tests/test_l2_scorer.py`
 
 - [ ] 安装依赖: `pip install pyyaml`
 - [ ] 运行: `python implementation/tests/test_l2_scorer.py`

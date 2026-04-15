@@ -15,7 +15,7 @@
 - L2 计算层完整，核心概率 / TA / 排序 / 异常检测都已实现
 - `implementation/tests/test_l2.py` 当前通过 `32/32`
 - `docs/product/PRD.md` 足够详细，适合工程接手
-- `implementation/implementation/frontend/dualyield.html` 是可用的高保真原型
+- `implementation/frontend/dualyield.html` 是可用的高保真原型
 - `docs/handoff/TECH-ONBOARDING.md` 和 `docs/docs/handoff/TODO-TECH.md` 结构清楚
 - L3 模板结论已可工作，不需要等 LLM 才能出结果
 
@@ -27,7 +27,7 @@
 - 真实市场数据与 IV 数据还没接完
 
 ### 2. Frontend still mock-only
-- `implementation/implementation/frontend/dualyield.html` 目前仍是原型态
+- `implementation/frontend/dualyield.html` 目前仍是原型态
 - 还没有把 orchestrator 输出灌进前端
 
 ### 3. Pipeline integration still incomplete

@@ -1,7 +1,7 @@
 # Yield Desk — Test Suite
 
 ## Automated
-- L2 scorer tests under `implementation/implementation/tests/test_l2_scorer.py`
+- L2 scorer tests under `implementation/tests/test_l2_scorer.py`
 
 ## Manual
 - Verify hero matches ranked result

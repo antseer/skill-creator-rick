@@ -7,20 +7,20 @@
 ## 🔴 P0 — 阻塞上线
 
 ### 1. Antseer 端点确认
-**文件**: `implementation/implementation/pipeline/l1_data/sources/antseer.py`
+**文件**: `implementation/pipeline/l1_data/sources/antseer.py`
 - [ ] 确认 Antseer 是否有 DCI 产品聚合端点
 - [ ] 确认市场数据端点 (K线+现货价)
 - [ ] 实现 `fetch_dci_products()` + `fetch_market()`
 - [ ] 字段映射到统一 schema
 
 ### 2. Binance DCI 接入
-**文件**: `implementation/implementation/pipeline/l1_data/sources/binance.py`
+**文件**: `implementation/pipeline/l1_data/sources/binance.py`
 - [ ] 填入 API Key + Secret
 - [ ] 实现产品列表获取 + K 线获取
 - [ ] 验证签名
 
 ### 3. 前端集成真实数据
-**文件**: `implementation/implementation/frontend/dualyield.html`
+**文件**: `implementation/frontend/dualyield.html`
 - [ ] 替换 mock 数据为 orchestrator 输出
 - [ ] 确定注入方式 (fetch API / 模板替换)
 
@@ -29,7 +29,7 @@
 ## 🟡 P1 — 上线后一周
 
 ### 4. OKX / Bybit / Bitget / KuCoin 接入
-**文件**: `implementation/implementation/pipeline/l1_data/sources/cex_others.py`
+**文件**: `implementation/pipeline/l1_data/sources/cex_others.py`
 - [ ] 每家: 签名实现 + 字段映射 + 错误处理 (各 0.5 天)
 
 ### 5. Redis 缓存

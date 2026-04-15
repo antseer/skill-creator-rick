@@ -4,13 +4,13 @@ Dual-investment recommendation example migrated to the vNext `docs / implementat
 
 ## Read order
 1. `docs/product/PRD.md`
-2. `docs/handoff/docs/handoff/TODO-TECH.md`
-3. `docs/review/docs/review/HANDOFF-REVIEW.md`
-4. `implementation/implementation/pipeline/`
+2. `docs/handoff/TODO-TECH.md`
+3. `docs/review/HANDOFF-REVIEW.md`
+4. `implementation/pipeline/`
 
 ## Quick start
 ```bash
-python3 -m unittest implementation.implementation.tests.test_l2 -v
+python3 -m unittest implementation.tests.test_l2 -v
 ```
 
 Optional smoke test:

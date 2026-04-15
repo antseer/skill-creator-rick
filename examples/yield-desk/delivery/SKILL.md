@@ -12,6 +12,6 @@ description: "Yield Desk stablecoin yield decision example package migrated to t
 
 ## Key entrypoints
 - `docs/product/PRD.md`
-- `docs/handoff/docs/handoff/TODO-TECH.md`
-- `implementation/implementation/pipeline/orchestrator.py`
-- `implementation/implementation/frontend/yield-desk.html`
+- `docs/handoff/TODO-TECH.md`
+- `implementation/pipeline/orchestrator.py`
+- `implementation/frontend/yield-desk.html`

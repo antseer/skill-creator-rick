@@ -7,8 +7,8 @@
 - L4 renders hero, evidence, and trust layers
 
 ## Production vs prototype
-- `implementation/implementation/frontend/dualyield.html` is prototype-only
-- Real data injection must come from `implementation/implementation/pipeline/orchestrator.py`
+- `implementation/frontend/dualyield.html` is prototype-only
+- Real data injection must come from `implementation/pipeline/orchestrator.py`
 
 ## Priority gaps
 See `../handoff/docs/handoff/TODO-TECH.md`.

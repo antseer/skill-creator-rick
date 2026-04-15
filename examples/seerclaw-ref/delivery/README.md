@@ -5,4 +5,4 @@ Spec-first security scanner reference package migrated to the vNext `docs / impl
 ## Read order
 1. `docs/product/PRD.md`
 2. `docs/requirements/`
-3. `delivery/delivery/SKILL.md`
+3. `delivery/SKILL.md`

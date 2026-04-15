@@ -13,6 +13,6 @@ compatibility: filesystem access required; Python 3 recommended.
 
 ## Key entrypoints
 - `docs/product/PRD.md`
-- `docs/handoff/docs/handoff/TODO-TECH.md`
-- `implementation/implementation/pipeline/orchestrator.py`
-- `implementation/implementation/frontend/dualyield.html`
+- `docs/handoff/TODO-TECH.md`
+- `implementation/pipeline/orchestrator.py`
+- `implementation/frontend/dualyield.html`

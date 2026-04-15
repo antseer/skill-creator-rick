@@ -954,7 +954,7 @@ yield-desk/
 ├── SKILL.md                    # Skill 入口描述 (被 trading-skill-creator 注册)
 ├── implementation/pipeline/
 │   ├── orchestrator.py         # Pipeline 编排器 — 按 L1→L2→L3→L4 执行
-│   ├── l1_implementation/data/
+│   ├── l1_data/
 │   │   ├── fetcher.py          # 统一数据获取 (Antseer → fallback)
 │   │   ├── schema.py           # RawProduct dataclass
 │   │   ├── normalizer.py       # 各 API 响应 → RawProduct 的映射
@@ -1044,15 +1044,15 @@ yield-desk/
 | 文件 | 类型 | 作用 | 维护方 |
 |---|---|---|---|
 | `SKILL.md` | Skill 注册文件 | 被 trading-skill-creator 索引 | 开发 |
-| `implementation/implementation/pipeline/orchestrator.py` | Python 脚本 | Pipeline 编排 | 开发 |
-| `implementation/implementation/pipeline/l1_implementation/data/*` | Python 模块 | 数据获取 + Schema | 开发 |
-| `implementation/implementation/pipeline/l2_compute/*` | Python 模块 | 固定算法 (filter/score/rank) | 开发 |
-| `implementation/implementation/pipeline/l3_decision/prompt.md` | Markdown | LLM System Prompt | 产品 + 开发 |
-| `implementation/implementation/pipeline/l3_decision/decision.py` | Python 模块 | LLM 调用 + fallback | 开发 |
-| `implementation/implementation/data/platform_meta.yaml` | YAML | CEX 安全元数据 | 运营 (月度更新) |
-| `implementation/implementation/data/protocol_meta.yaml` | YAML | DeFi 协议安全元数据 | 运营 (月度更新) |
-| `implementation/implementation/frontend/yield-desk.html` | HTML (React) | 单文件前端, 含全部 L4 容器 | 开发 |
-| `implementation/implementation/tests/*` | Python | L2 评分单测 + 边界测试 | 开发 |
+| `implementation/pipeline/orchestrator.py` | Python 脚本 | Pipeline 编排 | 开发 |
+| `implementation/pipeline/l1_data/*` | Python 模块 | 数据获取 + Schema | 开发 |
+| `implementation/pipeline/l2_compute/*` | Python 模块 | 固定算法 (filter/score/rank) | 开发 |
+| `implementation/pipeline/l3_decision/prompt.md` | Markdown | LLM System Prompt | 产品 + 开发 |
+| `implementation/pipeline/l3_decision/decision.py` | Python 模块 | LLM 调用 + fallback | 开发 |
+| `implementation/data/platform_meta.yaml` | YAML | CEX 安全元数据 | 运营 (月度更新) |
+| `implementation/data/protocol_meta.yaml` | YAML | DeFi 协议安全元数据 | 运营 (月度更新) |
+| `implementation/frontend/yield-desk.html` | HTML (React) | 单文件前端, 含全部 L4 容器 | 开发 |
+| `implementation/tests/*` | Python | L2 评分单测 + 边界测试 | 开发 |
 
 ---
 
