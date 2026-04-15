@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120">
+  <rect width="200" height="120" rx="12" fill="#13131a"/>
+  <rect x="3" y="3" width="194" height="114" rx="10" fill="none" stroke="#7c6aef" stroke-width="1"/>
+  <text x="100" y="55" text-anchor="middle" fill="#7c6aef" font-family="system-ui" font-size="24" font-weight="700">AntSkill</text>
+  <text x="100" y="80" text-anchor="middle" fill="#8a8a9a" font-family="system-ui" font-size="12">{{SKILL_NAME}}</text>
+</svg>

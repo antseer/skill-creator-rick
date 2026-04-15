@@ -1,0 +1,102 @@
+{
+  "user_context": {
+    "principal_usd": 50000,
+    "risk_preference": "balanced",
+    "convenience_requirement": "flexible_only",
+    "security_priority": "strict"
+  },
+  "market_stats": {
+    "median_apy": 0.042,
+    "mean_apy": 0.055,
+    "std_apy": 0.031,
+    "product_count": 28,
+    "cex_count": 16,
+    "defi_count": 12
+  },
+  "scored_products": [
+    {
+      "id": "binance_simple_earn_usdt_flex",
+      "platform": "Binance",
+      "product_name": "USDT Flexible Savings",
+      "venue_type": "CEX",
+      "chain": null,
+      "apy": 0.052,
+      "lock_days": 0,
+      "capacity_usd": 500000000,
+      "tier": "Tier-1",
+      "dims": {
+        "yield": 68,
+        "safety": 82,
+        "convenience": 95,
+        "capacity": 90,
+        "stability": 75
+      },
+      "total_score": 81.4,
+      "rank": 1,
+      "anomalies": []
+    },
+    {
+      "id": "aave_v3_eth_usdc",
+      "platform": "Aave V3",
+      "product_name": "USDC Supply",
+      "venue_type": "DeFi",
+      "chain": "Ethereum",
+      "apy": 0.048,
+      "lock_days": 0,
+      "capacity_usd": null,
+      "tier": "Tier-1",
+      "dims": {
+        "yield": 62,
+        "safety": 78,
+        "convenience": 70,
+        "capacity": 100,
+        "stability": 80
+      },
+      "total_score": 76.2,
+      "rank": 2,
+      "anomalies": []
+    },
+    {
+      "id": "ethena_susde_vault",
+      "platform": "Ethena",
+      "product_name": "sUSDe Vault",
+      "venue_type": "DeFi",
+      "chain": "Ethereum",
+      "apy": 0.152,
+      "lock_days": 7,
+      "capacity_usd": 80000000,
+      "tier": "Tier-2",
+      "dims": {
+        "yield": 100,
+        "safety": 42,
+        "convenience": 55,
+        "capacity": 60,
+        "stability": 35
+      },
+      "total_score": 61.8,
+      "rank": 3,
+      "anomalies": ["YIELD_OUTLIER", "HIGH_REWARD_DEPENDENCY"]
+    }
+  ],
+  "anomaly_alerts": [
+    {
+      "product_id": "ethena_susde_vault",
+      "rule_name": "YIELD_OUTLIER",
+      "severity": "warning",
+      "raw_data": {
+        "apy": 0.152,
+        "market_mean": 0.055,
+        "ratio": 2.76
+      }
+    },
+    {
+      "product_id": "ethena_susde_vault",
+      "rule_name": "HIGH_REWARD_DEPENDENCY",
+      "severity": "warning",
+      "raw_data": {
+        "reward_pct": 0.78,
+        "base_apy": 0.033
+      }
+    }
+  ]
+}

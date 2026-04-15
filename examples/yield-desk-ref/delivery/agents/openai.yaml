@@ -1,0 +1,16 @@
+name: "yield-desk-ref"
+display_name: "Yield Desk Ref"
+description: "Lightweight implementation reference for Yield Desk scoring and decision logic."
+version: "1.0.0"
+author: "Antseer"
+category: "analytics"
+tags:
+  - "yield"
+  - "reference"
+  - "implementation"
+icon:
+  small: "assets/icon-small.svg"
+  card: "assets/icon-card.svg"
+paradigm: "A"
+created: "2026-04-15"
+updated: "2026-04-15"
