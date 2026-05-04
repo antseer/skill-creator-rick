@@ -86,6 +86,8 @@
 | 脚手架模板 | 本地模板文件 | `templates/requirement`, `templates/complete`, `templates/common` | 2026-05-04 | 模板缺失时快速失败 |
 | 可执行检查 | 本地检查配置 | `validation.checks.json` | 2026-05-04 | 使 Stage 2 `--run-checks` 闸门失败 |
 | Antseer 前端组件标准 | 外部 GitHub repo + 外部本地缓存 | `scripts/sync_antseer_components.sh` → `${XDG_CACHE_HOME:-~/.cache}/skill-creator-rick/antseer-components`；已检查 commit `62ebc6c` | 2026-05-04 | 使用已有缓存并披露 commit；如果没有缓存则停止 |
+| Creator 自身仓库 | GitHub remote | `https://github.com/antseer/skill-creator-rick` | 2026-05-04 | creator 自身发布与成品 skill 发布分开 |
+| 成品 Skill 发布仓库 | 本地 git repo + GitHub remote | `/Users/rick/code/job/external/test_skills` → `https://github.com/antseer/test_skills.git` | 2026-05-04 | 发现无关 dirty 改动时停止覆盖；每个成品 skill 一个顶层 slug 目录 |
 
 ## 验证证据
 
@@ -94,11 +96,12 @@
 | Frontmatter 校验 | `PYTHONDONTWRITEBYTECODE=1 python scripts/quick_validate.py .` | pass | 2026-05-04 |
 | 阶段校验脚本语法 | `PYTHONDONTWRITEBYTECODE=1 python -B -c "compile every scripts/*.py source"` | pass | 2026-05-04 |
 | Raw Stage 1 scaffold guard | 生成临时半成品包，并确认占位符未填完时 validation 必须失败 | pass | 2026-05-04 |
-| Stage 2 脚手架冒烟测试 | 原始 complete scaffold 必须在 release 配置占位符填完前失败；填充示例值后 pass | pass | 2026-05-04 |
+| Stage 2 脚手架冒烟测试 | 原始 complete scaffold 必须在 release 配置占位符填完前失败；填充示例值后 pass | pass with filled sample values | 2026-05-04 |
 | 可执行校验闸门 | `PYTHONDONTWRITEBYTECODE=1 python scripts/validate_shareable_skill.py . --stage complete --run-checks` | pass | 2026-05-04 |
 | 结构化审计报告 | `PYTHONDONTWRITEBYTECODE=1 python scripts/audit_skill.py . --stage complete --run-checks --format json` | pass | 2026-05-04 |
 | Frontend SoT 回归测试 | bad Stage 2、fake commit、good Stage 2 金样本、root HTML + 引用/root-absolute 资源门禁、内联 mock JSON 词、非法 JSON contract、Stage 1 commit/deviation 门禁 | pass | 2026-05-04 |
 | 发布边界检查 | 确认组件库 checkout、`.git`、`node_modules`、`.skill`、pycache、swap 文件和生成缓存未进入 package source | pass | 2026-05-04 |
+| 仓库边界规则 | 新增 `references/skill-publishing-standard.md`；creator 保持在 `https://github.com/antseer/skill-creator-rick`；生成的 Stage 1 / Stage 2 成品 skill 发布到 `/Users/rick/code/job/external/test_skills` / `https://github.com/antseer/test_skills.git`；要求先参考同仓库写法并保护 dirty tree | pass | 2026-05-04 |
 
 ## 示例请求
 

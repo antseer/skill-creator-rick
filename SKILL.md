@@ -171,6 +171,32 @@ Stage 1 有两个合法形态，不能混淆：
 
 
 
+
+## Repository ownership
+
+两个仓库边界必须分清：
+
+| Repository | Purpose | URL |
+|---|---|---|
+| Creator repo | 发布和维护 `skill-creator-rick` 这个 creator skill 自身 | `https://github.com/antseer/skill-creator-rick` |
+| Generated skill publish repo | 发布由 creator 产出的 Stage 1 / Stage 2 成品 skill | `https://github.com/antseer/test_skills` |
+
+## Generated skill publishing repository
+
+后续 Antseer/Rick Stage 1 / Stage 2 成品 skill 的默认发布目录是：
+
+- Local: `/Users/rick/code/job/external/test_skills`
+- Remote: `https://github.com/antseer/test_skills.git`
+- Branch: `main`
+
+把 `test_skills` 视为成品 skill 的 shared publish repo，而不是本机安装目录；它也不是 `skill-creator-rick` 自身源码仓库。发布前可以参考同仓库已有 skill 的写法、目录、README、`skill.meta.json` 和 release 口径，但只能作为风格参考，不能继承过期 mock 数据、未验证来源或 secrets。完整规则见 `references/skill-publishing-standard.md`。
+
+发布原则：
+- 一个 skill 一个顶层目录，目录名用稳定 kebab-case slug。
+- 只同步已通过 Stage gate 的 skill package；不要把 `.skill`、pycache、`.DS_Store`、本地缓存、组件库 checkout、`node_modules` 或 secrets 发进去。
+- 发布前先看 `git status --short`，不得清理或覆盖发布仓库里的无关改动。
+- 如果 README/index 维护 skill 列表，发布时同步更新。
+
 ## Antseer components frontend SoT
 
 Before generating or refactoring any Skill frontend, especially S3 HTML, V2-style productization, Stage 2 real-data UI, K-line charts, indicator subplots, event markers, event rails, data inspectors, or source footers, sync and inspect the maintained component library:
@@ -286,10 +312,14 @@ python /Users/rick/.claude/skills/skill-creator-rick/scripts/audit_skill.py <ski
 
 ### Step 5. Publish when asked
 
-如果用户要求上传：
-- 同步到目标仓库
-- commit / push
-- 返回链接
+如果用户要求上传 / 发布 skill：
+- 默认发布到 `/Users/rick/code/job/external/test_skills`（remote: `https://github.com/antseer/test_skills.git`），除非用户明确指定其他目标
+- 发布前读取 `references/skill-publishing-standard.md`，确认本地 checkout 的 remote 正是 `https://github.com/antseer/test_skills.git` 且当前分支是 `main`，并参考发布仓库里相关 skill 的写法
+- 先检查 publish repo 的 `git status --short`，只改目标 skill 目录和必要 index/README，不覆盖无关改动
+- 同步已验证 package 到 `<publish-repo>/<skill-slug>/`，必要时更新 publish repo README/index
+- 从发布后的目录重新运行对应 Stage gate；发布前验收 / Stage 2 / Antseer frontend 仍必须通过子 agent review gate 且无 P0/P1
+- validation 和 review gate 都通过后，commit / push 到 publish repo
+- 返回发布路径、commit、branch、remote 链接
 - 明确说明发布的是 Stage 1 Semi-finished Skill 还是 Stage 2 Finished Skill
 - Stage 1 发布时必须醒目标注：mock 数据仅用于展示，不可直接用于真实分析或生产
 
@@ -329,6 +359,7 @@ split 输出必须包含：
 12. 不得删除或省略方法论、流水线编排和阶段门禁；轻量分享包也必须至少保留 `PIPELINE.md` + `STAGE-GATES.md`，完整 creator 包必须保留 `methodology/`、`sop/`、`quality/`
 13. Antseer frontend / Stage 2 / 发布前验收必须通过子 agent 独立规范复核；无 P0/P1 后才允许声明完成或 push
 14. `antseer-components` 是前端权威参考和硬门禁：Stage 1 尽量符合并披露偏差；Stage 2 必须符合代码风格、UI 风格、设计样式和数据契约
+15. 后续 skill 默认发布到 `/Users/rick/code/job/external/test_skills` / `https://github.com/antseer/test_skills.git`；发布前参考同仓库已有 skill 写法，但不得覆盖无关改动或继承未验证内容
 
 ## input_schema standard
 
