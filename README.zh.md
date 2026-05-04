@@ -85,19 +85,20 @@
 | 校验规则 | 本地 Python 脚本 | `scripts/quick_validate.py`, `scripts/validate_shareable_skill.py`, `scripts/audit_skill.py` | 2026-05-04 | 输出校验错误和审计报告 |
 | 脚手架模板 | 本地模板文件 | `templates/requirement`, `templates/complete`, `templates/common` | 2026-05-04 | 模板缺失时快速失败 |
 | 可执行检查 | 本地检查配置 | `validation.checks.json` | 2026-05-04 | 使 Stage 2 `--run-checks` 闸门失败 |
-| Antseer 前端组件标准 | 外部 GitHub repo + 外部本地缓存 | `scripts/sync_antseer_components.sh` → `${XDG_CACHE_HOME:-~/.cache}/skill-creator-rick/antseer-components` | 2026-05-04 | 使用已有缓存并披露 commit；如果没有缓存则停止 |
+| Antseer 前端组件标准 | 外部 GitHub repo + 外部本地缓存 | `scripts/sync_antseer_components.sh` → `${XDG_CACHE_HOME:-~/.cache}/skill-creator-rick/antseer-components`；已检查 commit `62ebc6c` | 2026-05-04 | 使用已有缓存并披露 commit；如果没有缓存则停止 |
 
 ## 验证证据
 
 | 检查项 | 命令 / 方法 | 结果 | 日期 |
 |---|---|---|---|
 | Frontmatter 校验 | `PYTHONDONTWRITEBYTECODE=1 python scripts/quick_validate.py .` | pass | 2026-05-04 |
-| 阶段校验脚本语法 | `PYTHONDONTWRITEBYTECODE=1 python -m py_compile scripts/*.py` | pass | 2026-05-04 |
+| 阶段校验脚本语法 | `PYTHONDONTWRITEBYTECODE=1 python -B -c "compile every scripts/*.py source"` | pass | 2026-05-04 |
 | Raw Stage 1 scaffold guard | 生成临时半成品包，并确认占位符未填完时 validation 必须失败 | pass | 2026-05-04 |
-| Stage 2 脚手架冒烟测试 | 原始 complete scaffold 必须在占位符填完前失败；填充示例值后 pass | pass | 2026-05-04 |
+| Stage 2 脚手架冒烟测试 | 原始 complete scaffold 必须在 release 配置占位符填完前失败；填充示例值后 pass | pass | 2026-05-04 |
 | 可执行校验闸门 | `PYTHONDONTWRITEBYTECODE=1 python scripts/validate_shareable_skill.py . --stage complete --run-checks` | pass | 2026-05-04 |
 | 结构化审计报告 | `PYTHONDONTWRITEBYTECODE=1 python scripts/audit_skill.py . --stage complete --run-checks --format json` | pass | 2026-05-04 |
-| 发布边界检查 | 确认组件库 checkout、`.git`、`node_modules`、pycache、生成缓存未进入 package source | pass | 2026-05-04 |
+| Frontend SoT 回归测试 | bad Stage 2、fake commit、good Stage 2 金样本、root HTML + 引用/root-absolute 资源门禁、内联 mock JSON 词、非法 JSON contract、Stage 1 commit/deviation 门禁 | pass | 2026-05-04 |
+| 发布边界检查 | 确认组件库 checkout、`.git`、`node_modules`、`.skill`、pycache、swap 文件和生成缓存未进入 package source | pass | 2026-05-04 |
 
 ## 示例请求
 

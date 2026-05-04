@@ -23,7 +23,7 @@ sys.dont_write_bytecode = True
 
 from quick_validate import validate_skill
 
-JUNK_PATTERNS = [".DS_Store", "*.pyc"]
+JUNK_PATTERNS = [".DS_Store", "*.pyc", "*.swp", ".*.swp"]
 JUNK_DIRS = {"__pycache__"}
 COMMON_REQUIRED_FILES = ["SKILL.md", "README.md", "README.zh.md"]
 REQUIREMENT_REQUIRED_FILES = [
@@ -91,11 +91,29 @@ USER_PATH_MOCK_PATTERNS = [
     r"示例数据\s*=",
     r"随机生成\s*\(",
 ]
+INLINE_JSON_MOCK_TERMS = [
+    r"\bmock\b",
+    r"\bstub\b",
+    r"\bfixture\b",
+    r"\bfake\b",
+    r"\bdummy\b",
+    r"\bplaceholder\b",
+    r"\bsynthetic\b",
+    r"\bsample\s+data\b",
+    r"\bdemo\s+data\b",
+    r"\brandom(?:ized|ly)?\b",
+    r"模拟数据",
+    r"示例数据",
+    r"假数据",
+    r"占位",
+    r"随机",
+]
 CODE_EXTENSIONS = {".py", ".js", ".ts", ".tsx", ".jsx", ".mjs", ".cjs", ".sql", ".yaml", ".yml", ".json"}
 IGNORE_MOCK_SCAN_PARTS = {"tests", "test", "fixtures", "fixture", "evals", "examples", "example", "docs", "references", "assets", "templates"}
 FRONTEND_EXTENSIONS = {".html", ".css", ".js", ".ts", ".tsx", ".jsx", ".mjs", ".cjs"}
 FRONTEND_SCAN_DIRS = {"frontend", "public", "src"}
 FRONTEND_IGNORE_PARTS = {"tests", "test", "fixtures", "fixture", "evals", "examples", "example", "docs", "references", "assets", "templates", "node_modules", ".git"}
+ROOT_FRONTEND_ASSET_DIRS = {"css", "js", "scripts", "styles"}
 BANNED_FRONTEND_VENDOR_DIRS = {"antseer-components", "frontend-components", "node_modules"}
 ANTSEER_CANONICAL_COLORS = {
     "#36dd0c",
@@ -108,17 +126,6 @@ ANTSEER_CANONICAL_COLORS = {
     "#121210",
     "#2a2926",
 }
-ROOT_LAYOUT_SELECTORS = [
-    ".container",
-    ".app",
-    ".skill-root",
-    ".antseer-root",
-    ".page",
-    "#app",
-    "#root",
-    "main",
-    "body",
-]
 FRONTEND_SOT_EVIDENCE_FILES = [
     "README.md",
     "README.zh.md",
@@ -152,6 +159,7 @@ RUN_CHECKS_FILE = "validation.checks.json"
 UNRESOLVED_PLACEHOLDER_PATTERNS = [
     r"(^|\|)\s*TODO\s*(\||$)",
     r":\s*TODO(\s|$)",
+    r"\bTODO_[A-Z0-9_]+\b",
     r"\bTODO MCP/API/database\b",
     r"\bReplace this\b",
     r"\{\{[^}]+\}\}",
@@ -183,11 +191,38 @@ def read_text(path: Path) -> str:
 def has_unresolved_placeholders(text: str) -> list[str]:
     hits: list[str] = []
     for i, line in enumerate(text.splitlines(), start=1):
+        if any(token in line for token in ["`TODO`", "`Replace this`", "`{{", "`{skill-name}`", "`{remote-head-sha}`", "`{tool-name}`", "`{module-name}`"]):
+            continue
         for pattern in UNRESOLVED_PLACEHOLDER_PATTERNS:
             if re.search(pattern, line, flags=re.IGNORECASE):
                 hits.append(f"line {i}: {line.strip()[:120]}")
                 break
     return hits
+
+
+def existing_files(root: Path, rels: list[str]) -> list[Path]:
+    return [root / rel for rel in rels if (root / rel).exists()]
+
+
+def stage2_placeholder_files(root: Path) -> list[Path]:
+    """Files that must be placeholder-free before a Stage 2 package can ship."""
+    files = existing_files(root, [
+        "SKILL.md",
+        "README.md",
+        "README.zh.md",
+        "MCP-COVERAGE.md",
+        "VERSION",
+        "skill.meta.json",
+        "validation.checks.json",
+        ".env.example",
+    ])
+
+    agents_dir = root / "agents"
+    if agents_dir.exists():
+        files.extend(p for p in agents_dir.rglob("*") if p.is_file())
+
+    files.extend(p for p in product_plan_files(root) if "templates" not in p.relative_to(root).parts)
+    return sorted(set(files))
 
 
 def has_junk(root: Path) -> list[str]:
@@ -296,23 +331,76 @@ def scan_user_path_mocks(root: Path) -> list[str]:
     return sorted(set(hits))
 
 
+def frontend_rel_ignored(rel: Path, allow_assets: bool = False) -> bool:
+    ignore_parts = FRONTEND_IGNORE_PARTS - ({"assets"} if allow_assets else set())
+    return any(part in ignore_parts for part in rel.parts)
+
+
+def linked_frontend_assets(root: Path, html_file: Path) -> list[Path]:
+    """Return local frontend assets directly referenced by a user-path HTML file."""
+    root = root.resolve()
+    html_file = html_file.resolve()
+    text = read_text(html_file)
+    refs = re.findall(r"\b(?:src|href)\s*=\s*[\"']([^\"'#?]+)", text, flags=re.IGNORECASE)
+    linked: list[Path] = []
+    for ref in refs:
+        if re.match(r"^(?:https?:)?//|^(?:data|mailto|tel):", ref, flags=re.IGNORECASE):
+            continue
+        # Root-absolute refs like /assets/app.js are local to the packaged
+        # static root, not filesystem /assets. They must be scanned with the
+        # same hard gate as relative ./js/app.js.
+        candidate = (root / ref.lstrip("/")).resolve() if ref.startswith("/") else (html_file.parent / ref).resolve()
+        try:
+            rel = candidate.relative_to(root)
+        except ValueError:
+            continue
+        if not candidate.is_file() or candidate.suffix.lower() not in FRONTEND_EXTENSIONS:
+            continue
+        if frontend_rel_ignored(rel, allow_assets=True):
+            continue
+        linked.append(candidate)
+    return linked
+
+
 def frontend_files(root: Path) -> list[Path]:
     """Return user-path frontend files, excluding examples/templates/reference docs."""
+    root = root.resolve()
     found: list[Path] = []
+    root_has_html = any(
+        p.is_file()
+        and p.suffix.lower() == ".html"
+        and len(p.relative_to(root).parts) == 1
+        for p in root.glob("*.html")
+    )
     for p in root.rglob("*"):
         if not p.is_file() or p.suffix.lower() not in FRONTEND_EXTENSIONS:
             continue
         rel = p.relative_to(root)
-        if any(part in FRONTEND_IGNORE_PARTS for part in rel.parts):
+        if frontend_rel_ignored(rel):
             continue
-        if "frontend" in rel.parts or rel.parts[0] in FRONTEND_SCAN_DIRS or p.name in {"index.html", "demo-v1.html"}:
+        if "frontend" in rel.parts or rel.parts[0] in FRONTEND_SCAN_DIRS:
             found.append(p)
             continue
 
-        # If a root-level official template exists, same-directory JS/CSS files
-        # are part of the user path and must not bypass the frontend gate.
-        if len(rel.parts) == 1 and (root / "index.html").exists() and p.suffix.lower() in {".css", ".js", ".ts", ".tsx", ".jsx", ".mjs", ".cjs"}:
+        # Any root-level HTML is a user-path frontend entrypoint: S3/V2 pages are
+        # often named output.html, prototype.html, or *-v2.html rather than
+        # index.html. Once a root HTML entrypoint exists, same-directory JS/CSS is
+        # part of the same user path and must not bypass the frontend gate.
+        if len(rel.parts) == 1 and p.suffix.lower() == ".html":
             found.append(p)
+            continue
+        if len(rel.parts) == 1 and root_has_html and p.suffix.lower() in {".css", ".js", ".ts", ".tsx", ".jsx", ".mjs", ".cjs"}:
+            found.append(p)
+            continue
+        if root_has_html and rel.parts[0] in ROOT_FRONTEND_ASSET_DIRS:
+            found.append(p)
+
+    # Follow direct local assets from every user-path HTML entrypoint, not only
+    # root-level output.html/prototype.html. A normal frontend/index.html can
+    # legally use root-absolute browser URLs like /assets/app.js; those are
+    # package-root-relative and must be scanned by the same SoT gate.
+    for html_file in [p for p in sorted(set(found)) if p.suffix.lower() == ".html"]:
+        found.extend(linked_frontend_assets(root, html_file))
     return sorted(set(found))
 
 
@@ -340,13 +428,18 @@ def selector_has_outer_layout_constraint(css_or_html: str) -> list[str]:
         selector = selector.strip()
         if not selector:
             return False
+        # Only root selectors themselves are host-owned. Descendant selectors
+        # like `main .card` or `.container > .card` style internal components
+        # and must not be blocked by the outer-layout gate.
+        if re.search(r"[\s>+~]", selector):
+            return False
         root_patterns = [
-            r"(^|[\s>+~])body($|[\s>+~.#:\[])",
-            r"(^|[\s>+~])main($|[\s>+~.#:\[])",
-            r"(^|[\s>+~])#(?:app|root)($|[\s>+~.#:\[])",
-            r"(^|[\s>+~])\.(?:container|app|skill-root|antseer-root|page)($|[\s>+~.#:\[])",
+            r"body(?:[.#:\[].*)?",
+            r"main(?:[.#:\[].*)?",
+            r"#(?:app|root)(?:[:\[].*)?",
+            r"\.(?:container|app|skill-root|antseer-root|page)(?:[.#:\[].*)?",
         ]
-        return any(re.search(pattern, selector, flags=re.IGNORECASE) for pattern in root_patterns)
+        return any(re.fullmatch(pattern, selector, flags=re.IGNORECASE) for pattern in root_patterns)
 
     block_re = re.compile(r"(?P<selector>[^{}]+)\{(?P<body>[^{}]+)\}", re.IGNORECASE | re.MULTILINE)
     for m in block_re.finditer(css_or_html):
@@ -403,7 +496,13 @@ def has_component_commit_evidence(root: Path, current_commit: str | None = None)
         return False
     if not current_commit:
         return False
-    return current_commit in evidence
+    # sync_antseer_components.sh historically printed git's default 7-char %h,
+    # while the validator used --short=12. Accept only prefixes of the current
+    # local cache HEAD so copied 7/12/40-char evidence works without accepting an
+    # unrelated fake hash.
+    hexes = re.findall(r"\b[0-9a-f]{7,40}\b", evidence, flags=re.IGNORECASE)
+    current = current_commit.lower()
+    return any(current.startswith(h.lower()) or h.lower().startswith(current) for h in hexes)
 
 
 def frontend_stage1_deviation_documented(root: Path) -> bool:
@@ -415,6 +514,56 @@ def frontend_stage1_deviation_documented(root: Path) -> bool:
         evidence,
         flags=re.IGNORECASE | re.DOTALL,
     ))
+
+
+def stage1_deviation_disclosure_gaps(root: Path, soft_misses: list[str]) -> list[str]:
+    """Require Stage 1 frontend deviation docs to name each miss category.
+
+    A generic "frontend has Stage 2 blockers" sentence is not enough; handoff
+    packages must tell Stage 2 implementers which code/UI/design contract is
+    still off-standard.
+    """
+    if not soft_misses:
+        return []
+    evidence = frontend_sot_evidence_text(root)
+    if not frontend_stage1_deviation_documented(root):
+        return ["missing frontend deviation disclosure"]
+
+    category_patterns = [
+        ("storage", r"localStorage|sessionStorage|storage|存储"),
+        ("mock data", r"mock|stub|fixture|fake|dummy|placeholder|synthetic|demo data|sample data|模拟|示例|假数据|占位"),
+        ("design tokens/palette", r"token|palette|color|颜色|色板|设计规范|canonical"),
+        ("source footer", r"footer|source footer|Powered by Antseer|Data Source|数据来源|来源页脚"),
+        ("outer layout", r"layout|max-width|padding|margin|container|外层|宿主|布局"),
+        ("code layering", r"adapter|calculator|view model|renderer|分层|渲染|计算|业务逻辑"),
+        ("JSON data contract", r"#antseer-data|antseer-data-schema|JSON|schema|contract|数据契约|官网 JSON"),
+        ("fallback/default data", r"fallback|default|降级|默认数据"),
+    ]
+    needed: set[tuple[str, str]] = set()
+    for miss in soft_misses:
+        lower = miss.lower()
+        if "localstorage" in lower or "sessionstorage" in lower:
+            needed.add(category_patterns[0])
+        if any(token in lower for token in ["mock", "stub", "random", "demo", "fixture", "synthetic"]):
+            needed.add(category_patterns[1])
+        if any(token in lower for token in ["token", "palette", "color"]):
+            needed.add(category_patterns[2])
+        if "footer" in lower or "source" in lower:
+            needed.add(category_patterns[3])
+        if "layout" in lower or "outer" in lower or "max-width" in lower:
+            needed.add(category_patterns[4])
+        if any(token in lower for token in ["adapter", "calculator", "view model", "renderer", "compute", "layer"]):
+            needed.add(category_patterns[5])
+        if "antseer-data" in lower or "json" in lower or "schema" in lower or "contract" in lower:
+            needed.add(category_patterns[6])
+        if "fallback" in lower or "default data" in lower:
+            needed.add(category_patterns[7])
+
+    gaps = []
+    for label, pattern in sorted(needed):
+        if not re.search(pattern, evidence, flags=re.IGNORECASE):
+            gaps.append(label)
+    return gaps
 
 
 def frontend_code_style_misses(aggregate: str) -> list[str]:
@@ -439,7 +588,8 @@ def frontend_code_style_misses(aggregate: str) -> list[str]:
         misses.append("renderer appears to fetch raw data; move data access into adapter")
 
     renderer_calc_patterns = [
-        r"\b(render|renderer|mount)\w*\s*(?:=|:)?\s*(?:function)?[^{=]*\{[^}]{0,1200}\b(reduce|map|filter|sort)\s*\(",
+        r"\b(render|renderer|mount)\w*\s*(?:=|:)?\s*(?:function)?[^{=]*\{[^}]{0,1200}(?<!\.)\b(?!viewModel\b)[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*){0,3}\.(reduce|filter|sort)\s*\(",
+        r"\b(render|renderer|mount)\w*\s*(?:=|:)?\s*(?:function)?[^{=]*\{[^}]{0,1200}(?<!\.)\b(?:raw|payload|data|domain|rows|items)[A-Za-z_$\w]*(?:\.[A-Za-z_$][\w$]*){0,3}\.map\s*\(",
     ]
     if any(re.search(pattern, aggregate, flags=re.IGNORECASE | re.DOTALL) for pattern in renderer_calc_patterns):
         misses.append("renderer appears to compute business/domain transformations; move logic into calculator/view model")
@@ -454,9 +604,111 @@ def frontend_code_style_misses(aggregate: str) -> list[str]:
     return misses
 
 
+def strip_json_script_blocks(text: str) -> str:
+    return re.sub(
+        r"<script\b(?=[^>]*\btype=[\"']application/json[\"'])[^>]*>.*?</script>",
+        "",
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+
+
+def extract_inline_json_script(html: str, element_id: str) -> tuple[object | None, str | None]:
+    pattern = re.compile(
+        rf"<script\b(?=[^>]*\bid=[\"']{re.escape(element_id)}[\"'])(?P<attrs>[^>]*)>(?P<body>.*?)</script>",
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    match = pattern.search(html)
+    if not match:
+        return None, f"missing #{element_id}"
+    attrs = match.group("attrs")
+    if not re.search(r"\btype=[\"']application/json[\"']", attrs, flags=re.IGNORECASE):
+        return None, f"#{element_id} must be type=\"application/json\""
+    body = match.group("body").strip()
+    if not body:
+        return None, f"#{element_id} must contain non-empty JSON"
+    try:
+        parsed = json.loads(body)
+    except Exception as e:
+        return None, f"#{element_id} is not valid JSON: {e}"
+    if not parsed:
+        return None, f"#{element_id} must contain a non-empty JSON object/array"
+    if not isinstance(parsed, (dict, list)):
+        return None, f"#{element_id} must contain a JSON object or array"
+    return parsed, None
+
+
+def json_keys(obj: object) -> set[str]:
+    keys: set[str] = set()
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            keys.add(str(key))
+            keys.update(json_keys(value))
+    elif isinstance(obj, list):
+        for item in obj:
+            keys.update(json_keys(item))
+    return keys
+
+
+def inline_data_has_provenance(data: object, evidence_text: str) -> bool:
+    keys = {k.lower().replace("_", "").replace("-", "") for k in json_keys(data)}
+    provenance_keys = {
+        "source",
+        "sources",
+        "datasource",
+        "datasources",
+        "provenance",
+        "generatedat",
+        "verifiedat",
+        "lastverified",
+        "timerange",
+        "samplesize",
+        "mcp",
+        "api",
+    }
+    if keys & provenance_keys:
+        return True
+    return bool(re.search(
+        r"(#antseer-data|inline data|内联数据|官网 JSON).{0,240}(source|data source|provenance|verified|generated|sample|time range|数据来源|来源|验证|生成|样本|时间范围)",
+        evidence_text,
+        flags=re.IGNORECASE | re.DOTALL,
+    ))
+
+
+def frontend_json_contract_misses(root: Path, html: Path, text: str) -> list[str]:
+    rel = html.relative_to(root)
+    misses: list[str] = []
+    data, data_error = extract_inline_json_script(text, "antseer-data")
+    schema, schema_error = extract_inline_json_script(text, "antseer-data-schema")
+    if data_error:
+        misses.append(f"{rel} {data_error} payload for official JSON-template delivery")
+    if schema_error:
+        misses.append(f"{rel} {schema_error} contract")
+    if data_error or schema_error:
+        return misses
+
+    assert data is not None and schema is not None
+    if isinstance(schema, list):
+        misses.append(f"{rel} #antseer-data-schema must be a JSON object describing fields/contracts")
+    elif not json_keys(schema):
+        misses.append(f"{rel} #antseer-data-schema must describe at least one field/contract key")
+
+    serialized_data = json.dumps(data, ensure_ascii=False)
+    if any(re.search(pattern, serialized_data, flags=re.IGNORECASE) for pattern in USER_PATH_MOCK_PATTERNS):
+        misses.append(f"{rel} #antseer-data appears to contain mock/stub/random/demo data patterns")
+    if any(re.search(pattern, serialized_data, flags=re.IGNORECASE) for pattern in INLINE_JSON_MOCK_TERMS):
+        misses.append(f"{rel} #antseer-data appears to contain mock/fixture/synthetic/demo data terms")
+
+    if not inline_data_has_provenance(data, frontend_sot_evidence_text(root)):
+        misses.append(f"{rel} #antseer-data must include or document source/provenance/verification evidence")
+
+    return misses
+
+
 def frontend_ui_style_misses(aggregate: str) -> list[str]:
     misses: list[str] = []
-    hexes = set(re.findall(r"#[0-9a-fA-F]{6}\b", aggregate))
+    style_text = strip_json_script_blocks(aggregate)
+    hexes = set(re.findall(r"#[0-9a-fA-F]{6}\b", style_text))
     noncanonical = sorted(h for h in hexes if h.lower() not in ANTSEER_CANONICAL_COLORS)
     if noncanonical:
         misses.append("frontend contains non-canonical hardcoded colors: " + ", ".join(noncanonical[:10]))
@@ -470,6 +722,10 @@ def validate_frontend_sot(root: Path, stage: str) -> tuple[list[str], list[str]]
     be a handoff prototype. Stage 2 turns the same misses into hard errors.
     Vendoring the authority repo/cache is always an error.
     """
+    # Normalize once so paths returned by frontend_files()/linked assets and
+    # paths used for reporting share the same /var vs /private/var spelling on
+    # macOS temp dirs. Otherwise Path.relative_to() can fail even for children.
+    root = root.resolve()
     errors: list[str] = []
     warnings: list[str] = []
     files = frontend_files(root)
@@ -484,13 +740,14 @@ def validate_frontend_sot(root: Path, stage: str) -> tuple[list[str], list[str]]
     html_files = [p for p in files if p.suffix.lower() == ".html"]
     aggregate = "\n".join(read_text(p) for p in files)
     soft_misses: list[str] = []
+    stage1_hard_misses: list[str] = []
     current_commit = antseer_components_cache_commit()
     has_commit_evidence = has_component_commit_evidence(root, current_commit)
 
     if not current_commit:
-        soft_misses.append("antseer-components local cache is missing or not a readable git checkout")
+        stage1_hard_misses.append("antseer-components local cache is missing or not a readable git checkout")
     if not has_commit_evidence:
-        soft_misses.append("package docs must record antseer-components cache commit/evidence")
+        stage1_hard_misses.append("package docs must record antseer-components cache commit/evidence")
 
     if "localStorage" in aggregate or "sessionStorage" in aggregate:
         soft_misses.append("frontend must not use localStorage/sessionStorage")
@@ -519,18 +776,20 @@ def validate_frontend_sot(root: Path, stage: str) -> tuple[list[str], list[str]]
     for html in html_files:
         text = read_text(html)
         rel = html.relative_to(root)
-        if html.name == "index.html" or "frontend" in rel.parts:
-            if not re.search(r'id=["\']antseer-data["\']', text):
-                soft_misses.append(f"{rel} missing inline #antseer-data payload for official JSON-template delivery")
-            if not re.search(r'id=["\']antseer-data-schema["\']', text):
-                soft_misses.append(f"{rel} missing #antseer-data-schema contract")
+        soft_misses.extend(frontend_json_contract_misses(root, html, text))
 
     if stage == "complete":
+        soft_misses.extend(stage1_hard_misses)
         errors.extend(f"Stage 2 frontend SoT gate: {miss}" for miss in sorted(set(soft_misses)))
     else:
+        errors.extend(f"Stage 1 frontend SoT gate: {miss}" for miss in sorted(set(stage1_hard_misses)))
         warnings.extend(f"Stage 1 frontend SoT best-effort: {miss}" for miss in sorted(set(soft_misses)))
-        if soft_misses and not frontend_stage1_deviation_documented(root):
-            warnings.append("Stage 1 frontend SoT best-effort: deviations should be recorded in review-report/TODO-TECH/TECH-INTERFACE-REQUEST")
+        disclosure_gaps = stage1_deviation_disclosure_gaps(root, sorted(set(soft_misses)))
+        if disclosure_gaps:
+            errors.append(
+                "Stage 1 frontend SoT gate: concrete deviations must be recorded in "
+                "review-report/TODO-TECH/TECH-INTERFACE-REQUEST: " + ", ".join(disclosure_gaps)
+            )
 
     return errors, warnings
 
@@ -661,10 +920,18 @@ def load_run_checks(root: Path) -> tuple[list[dict], list[str]]:
         if not isinstance(command, list) or not command or not all(isinstance(x, str) for x in command):
             errors.append(f"{RUN_CHECKS_FILE}.checks[{i}].command must be a non-empty string array")
             continue
+        try:
+            timeout_seconds = int(check.get("timeout_seconds", 60))
+        except (TypeError, ValueError):
+            errors.append(f"{RUN_CHECKS_FILE}.checks[{i}].timeout_seconds must be a positive integer")
+            continue
+        if timeout_seconds <= 0:
+            errors.append(f"{RUN_CHECKS_FILE}.checks[{i}].timeout_seconds must be a positive integer")
+            continue
         normalized.append({
             "name": str(name),
             "command": command,
-            "timeout_seconds": int(check.get("timeout_seconds", 60)),
+            "timeout_seconds": timeout_seconds,
         })
     return normalized, errors
 
@@ -827,6 +1094,13 @@ def validate_complete(root: Path, run_checks: bool = False) -> list[str]:
     validation_blob = readme + "\n" + readme_zh + "\n" + coverage
     if "TODO" in validation_blob or "待补" in validation_blob:
         errors.append("Stage 2 docs must not contain unresolved TODO/待补 placeholders in README or MCP-COVERAGE.md")
+
+    for p in stage2_placeholder_files(root):
+        if not p.exists() or not p.is_file():
+            continue
+        hits = has_unresolved_placeholders(read_text(p))
+        if hits:
+            errors.append(f"Unresolved placeholders in {p.relative_to(root)}: " + "; ".join(hits[:3]))
 
     if run_checks:
         errors.extend(run_executable_checks(root))

@@ -27,7 +27,7 @@ print_cache() {
 ' "$REPO_URL"
   if [ -d "$CACHE_DIR/.git" ]; then
     printf 'commit: '
-    git -C "$CACHE_DIR" log -1 --format='%h %s (%ci)%n'
+    git -C "$CACHE_DIR" log -1 --format='%h %s (%ci)%n' --abbrev=12
   else
     printf 'commit: unavailable; cache is not a git checkout
 '

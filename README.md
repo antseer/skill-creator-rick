@@ -85,19 +85,20 @@ This meta-skill does not require external market data. It operates on local skil
 | Validation rules | Local Python scripts | `scripts/quick_validate.py`, `scripts/validate_shareable_skill.py`, `scripts/audit_skill.py` | 2026-05-04 | Print validation errors and audit reports |
 | Scaffold templates | Local template files | `templates/requirement`, `templates/complete`, `templates/common` | 2026-05-04 | Fail fast if a template is missing |
 | Executable checks | Local check config | `validation.checks.json` | 2026-05-04 | Fail the Stage 2 `--run-checks` gate |
-| Antseer frontend component standard | External GitHub repo + external local cache | `scripts/sync_antseer_components.sh` → `${XDG_CACHE_HOME:-~/.cache}/skill-creator-rick/antseer-components` | 2026-05-04 | Use existing cache with commit disclosed, or stop if no cache exists |
+| Antseer frontend component standard | External GitHub repo + external local cache | `scripts/sync_antseer_components.sh` → `${XDG_CACHE_HOME:-~/.cache}/skill-creator-rick/antseer-components`; inspected commit `62ebc6c` | 2026-05-04 | Use existing cache with commit disclosed, or stop if no cache exists |
 
 ## Validation Evidence
 
 | Check | Command / method | Result | Date |
 |---|---|---|---|
 | Frontmatter validation | `PYTHONDONTWRITEBYTECODE=1 python scripts/quick_validate.py .` | pass | 2026-05-04 |
-| Stage validator syntax | `PYTHONDONTWRITEBYTECODE=1 python -m py_compile scripts/*.py` | pass | 2026-05-04 |
+| Stage validator syntax | `PYTHONDONTWRITEBYTECODE=1 python -B -c "compile every scripts/*.py source"` | pass | 2026-05-04 |
 | Raw Stage 1 scaffold guard | generate temp requirement package and confirm validation fails until placeholders are filled | pass | 2026-05-04 |
-| Stage 2 scaffold smoke test | raw complete scaffold intentionally fails until placeholders are filled; filled fixture passes | pass with filled sample values | 2026-05-04 |
+| Stage 2 scaffold smoke test | raw complete scaffold fails until release-file placeholders are filled; filled fixture passes | pass with filled sample values | 2026-05-04 |
 | Executable validation gate | `PYTHONDONTWRITEBYTECODE=1 python scripts/validate_shareable_skill.py . --stage complete --run-checks` | pass | 2026-05-04 |
 | Structured audit report | `PYTHONDONTWRITEBYTECODE=1 python scripts/audit_skill.py . --stage complete --run-checks --format json` | pass | 2026-05-04 |
-| Release boundary check | Confirm component checkout, `.git`, `node_modules`, pycache, and generated caches are absent from package source | pass | 2026-05-04 |
+| Frontend SoT regression tests | bad Stage 2, fake commit, good Stage 2 golden fixture, root HTML + linked/root-absolute asset gates, inline mock JSON terms, invalid JSON contract, Stage 1 commit/deviation gates | pass | 2026-05-04 |
+| Release boundary check | Confirm component checkout, `.git`, `node_modules`, `.skill`, pycache, swap files, and generated caches are absent from package source | pass | 2026-05-04 |
 
 ## Example requests
 

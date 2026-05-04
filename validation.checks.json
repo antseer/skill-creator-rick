@@ -31,6 +31,16 @@
       "timeout_seconds": 30
     },
     {
+      "name": "raw complete scaffold intentionally fails",
+      "command": [
+        "python",
+        "-B",
+        "-c",
+        "import subprocess,tempfile,sys; from pathlib import Path; d=Path(tempfile.mkdtemp()); subprocess.check_call([sys.executable,'scripts/scaffold_shareable_skill.py',str(d),'--skill-name','tmp-complete-skill','--display-name','Tmp Complete Skill','--stage','complete'], stdout=subprocess.DEVNULL); r=subprocess.run([sys.executable,'-B','scripts/validate_shareable_skill.py',str(d),'--stage','complete'], text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE); out=r.stdout+r.stderr; assert r.returncode != 0, 'raw complete scaffold should fail until placeholders are filled'; assert 'Unresolved placeholders' in out or 'TODO' in out, out"
+      ],
+      "timeout_seconds": 30
+    },
+    {
       "name": "stage complete validation",
       "command": [
         "python",

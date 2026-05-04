@@ -20,7 +20,7 @@ if str(SCRIPT_DIR) not in sys.path:
 from validate_shareable_skill import validate_package  # noqa: E402
 
 EXCLUDE_DIRS = {"__pycache__", "node_modules", ".git", ".venv"}
-EXCLUDE_GLOBS = {"*.pyc"}
+EXCLUDE_GLOBS = {"*.pyc", "*.skill"}
 EXCLUDE_FILES = {".DS_Store"}
 
 
@@ -57,13 +57,18 @@ def package_skill(skill_path: Path, output_dir: Path | None, stage: str, run_che
             print(f"- {warning}")
     print()
 
-    output_path = output_dir.resolve() if output_dir else Path.cwd()
+    output_path = output_dir.resolve() if output_dir else skill_path.parent
     output_path.mkdir(parents=True, exist_ok=True)
     archive_path = output_path / f"{skill_path.name}.skill"
+    if archive_path.exists():
+        archive_path.unlink()
 
     with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for file_path in skill_path.rglob("*"):
             if not file_path.is_file():
+                continue
+            if file_path.resolve() == archive_path.resolve():
+                print(f"  Skipped archive itself: {file_path}")
                 continue
             arcname = file_path.relative_to(skill_path.parent)
             if should_exclude(arcname):

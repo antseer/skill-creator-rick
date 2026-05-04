@@ -114,13 +114,12 @@ def requirement_dimensions(root: Path) -> list[Dimension]:
     return dims
 
 
-def complete_dimensions(root: Path, run_checks: bool) -> list[Dimension]:
+def complete_dimensions(root: Path, run_checks: bool, run_errors: list[str] | None = None) -> list[Dimension]:
     readme = read_text(root / "README.md")
     readme_zh = read_text(root / "README.zh.md")
     coverage = read_text(root / "MCP-COVERAGE.md")
     validation_blob = readme + "\n" + readme_zh + "\n" + coverage
-    run_report = validate_package(root, stage="complete", run_checks=run_checks)
-    run_errors = [e for e in run_report.errors if e.startswith("Run check") or "validation.checks.json" in e]
+    run_errors = run_errors or []
     frontend_errors, frontend_warnings = validate_frontend_sot(root, "complete")
     dims = [
         score_dimension("stage2_required_files", [(rel, exists(root, rel)) for rel in COMPLETE_REQUIRED_FILES]),
@@ -191,14 +190,15 @@ def compute_verdict(stage: str, score: float, validation_errors: list[str], bloc
 
 def audit(root: Path, stage_arg: str, run_checks: bool) -> AuditReport:
     stage = detect_stage(root) if stage_arg == "auto" else stage_arg
+    validation = validate_package(root, stage=stage, run_checks=run_checks)
+    errors = validation.errors
     dims = common_dimensions(root)
     if stage == "requirement":
         dims.extend(requirement_dimensions(root))
     else:
-        dims.extend(complete_dimensions(root, run_checks=run_checks))
+        run_errors = [e for e in errors if e.startswith("Run check") or "validation.checks.json" in e]
+        dims.extend(complete_dimensions(root, run_checks=run_checks, run_errors=run_errors))
 
-    validation = validate_package(root, stage=stage, run_checks=run_checks)
-    errors = validation.errors
     warnings = validation.warnings + flatten_warnings(dims)
     missing = flatten_missing(dims)
     score = round(sum(dim.score for dim in dims) / len(dims), 4) if dims else 0.0
