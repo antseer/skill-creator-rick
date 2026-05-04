@@ -155,6 +155,24 @@ Stage 1 有两个合法形态，不能混淆：
 **验证状态**：用户主路径不再依赖 mock 数据；全部必需数据项已通过 `MCP-COVERAGE.md` 验证。
 ```
 
+
+
+## Antseer components frontend SoT
+
+Before generating or refactoring any Skill frontend, especially S3 HTML, V2-style productization, Stage 2 real-data UI, K-line charts, indicator subplots, event markers, event rails, data inspectors, or source footers, sync and inspect the maintained component library:
+
+```bash
+bash /Users/rick/.claude/skills/skill-creator-rick/scripts/sync_antseer_components.sh
+```
+
+Use `references/antseer-components-standard.md` as the rule. Treat `https://github.com/antseer/antseer-components` as the frontend component source of truth, similar to the MCP capability map for data. Reference its modular structure and component contracts, but never inherit demo/fixture/synthetic data into Stage 2 user paths.
+
+## V2-style productization writing
+
+When a user provides a `*-v2.html` page, says the page was generated from a publication/template/old version, or asks to keep functionality unchanged while aligning internal logic and visual style with product standards, follow `references/v2-writing-standard.md`.
+
+V2-style writing must preserve functional invariants while specifying product-system aligned internal logic, data contracts, visual behavior, reusable component boundaries, and acceptance gates.
+
 ## Standard workflow
 
 ### Step 1. Reality review
@@ -232,6 +250,22 @@ python /Users/rick/.claude/skills/skill-creator-rick/scripts/audit_skill.py <ski
 
 如果是 Stage 2 且有测试 / MCP 连通性检查，应写入 `validation.checks.json` 并用 `--run-checks` 执行。
 
+### Step 4.5. Mandatory sub-agent review gate
+
+任何 Antseer frontend / Stage 2 / 发布前验收，主 agent 自测通过不算完成，必须再做 **子 agent 独立规范复核**，且复核通过后才能声明完成、上传或 push。
+
+最低要求：
+- 至少 2 个子 agent：
+  1. **规范/API reviewer**：检查 `antseer-components`、数据契约、Stage gate、mock/fixture、模板数据放置规则、组件 API 用法。
+  2. **UI/UX/browser reviewer**：检查 V2 风格继承、视觉规范、交互行为、浏览器可用性、console error。
+- 子 agent 必须只读 review，避免和主流程互相覆盖。
+- 如果任一子 agent 给出 P0/P1，禁止说“完成”，必须先修复再复审。
+- P2 可由主 agent 判断是否阻塞，但必须在最终报告中说明取舍。
+- 最终报告必须写明：子 agent 数量、结论、剩余问题、是否通过。
+
+完成定义：
+> 本地自测通过 + 子 agent 规范复核无 P0/P1 + 必要文件同步一致，才算完成。
+
 ### Step 5. Publish when asked
 
 如果用户要求上传：
@@ -275,6 +309,7 @@ split 输出必须包含：
 10. 如果 skill 有用户参数，`skill.meta.json > input_schema` 必须存在，且 zh/en key 完全一致
 11. split 不是阶段
 12. 不得删除或省略方法论、流水线编排和阶段门禁；轻量分享包也必须至少保留 `PIPELINE.md` + `STAGE-GATES.md`，完整 creator 包必须保留 `methodology/`、`sop/`、`quality/`
+13. Antseer frontend / Stage 2 / 发布前验收必须通过子 agent 独立规范复核；无 P0/P1 后才允许声明完成或 push
 
 ## input_schema standard
 

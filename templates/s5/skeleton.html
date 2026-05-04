@@ -71,7 +71,8 @@ body {
 }
 
 /* ───── Layout ───── */
-.app { display: flex; min-height: 100vh; max-width: 1440px; margin: 0 auto; }
+/* Scaffold-only: host page owns width, centering, and outer padding. */
+.app { display: flex; min-height: 100vh; }
 .input-panel {
   width: 300px; flex-shrink: 0;
   background: var(--card);
@@ -265,26 +266,28 @@ body {
 </div>
 
 <footer class="footer">
-  Mock Data — Powered by Antseer.ai · Prototype for demonstration only
+  demo-v1 · Powered by Antseer.ai
 </footer>
 
 <script>
-// ───── Mock Data & Interaction ─────
+// ───── Scaffold Data & Interaction ─────
 // 注意：不要用 localStorage/sessionStorage（违反 G2.A9）
-const state = { lastInput: null, mockData: null };
+// Stage 1: 只可接入已在 Data Reality / TECH-INTERFACE-REQUEST 声明的数据缺口。
+// Stage 2: 必须替换为已验证 MCP / API / 数据包，不得保留演示数据。
+const state = { lastInput: null, sampleData: null };
 
 function run() {
   const v1 = document.getElementById('input-1').value;
   const v2 = document.getElementById('input-2').value;
   state.lastInput = { v1, v2 };
   
-  // TODO: 调用 mock 数据生成器，更新 Hero / 论据层
+  // 接入已声明的数据源或已验证的真实数据包，更新 Hero / 论据层
   console.log('Running with', state.lastInput);
 }
 
 // 初始化：默认状态下也要有内容，不要空白
 document.addEventListener('DOMContentLoaded', () => {
-  // TODO: 渲染默认态 Hero（引导语 + 示例结论）
+  // 渲染默认态 Hero（引导语 + 当前可用数据状态）
 });
 </script>
 

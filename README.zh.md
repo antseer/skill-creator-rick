@@ -79,23 +79,25 @@
 |---|---|---|---|---|
 | Skill 包文件 | 用户本地文件系统 | 直接读写文件 | 2026-04-27 | 报告缺失文件和修复项 |
 | 打包标准 | 本 skill 内置引用文档 | `references/*.md` | 2026-04-27 | 回退到 `SKILL.md` 契约 |
-| 阶段门禁 | 本地门禁文档 | `STAGE-GATES.md`, `quality/*.md` | 2026-04-29 | 缺失时停止包装 |
-| 流水线 SOP | 本地流水线文档 | `PIPELINE.md`, `sop/*.md`, `quality/*.md` | 2026-04-29 | 回退到 `SKILL.md` 流水线表 |
-| 方法论 | 本地方法论文档 | `methodology/*.md` | 2026-04-29 | 报告方法论缺失并停止 creator workflow |
-| 校验规则 | 本地 Python 脚本 | `scripts/quick_validate.py`, `scripts/validate_shareable_skill.py`, `scripts/audit_skill.py` | 2026-04-29 | 输出校验错误和审计报告 |
-| 脚手架模板 | 本地模板文件 | `templates/requirement`, `templates/complete`, `templates/common` | 2026-04-29 | 模板缺失时快速失败 |
-| 可执行检查 | 本地检查配置 | `validation.checks.json` | 2026-04-29 | 使 Stage 2 `--run-checks` 闸门失败 |
+| 阶段门禁 | 本地门禁文档 | `STAGE-GATES.md`, `quality/*.md` | 2026-05-04 | 缺失时停止包装 |
+| 流水线 SOP | 本地流水线文档 | `PIPELINE.md`, `sop/*.md`, `quality/*.md` | 2026-05-04 | 回退到 `SKILL.md` 流水线表 |
+| 方法论 | 本地方法论文档 | `methodology/*.md` | 2026-05-04 | 报告方法论缺失并停止 creator workflow |
+| 校验规则 | 本地 Python 脚本 | `scripts/quick_validate.py`, `scripts/validate_shareable_skill.py`, `scripts/audit_skill.py` | 2026-05-04 | 输出校验错误和审计报告 |
+| 脚手架模板 | 本地模板文件 | `templates/requirement`, `templates/complete`, `templates/common` | 2026-05-04 | 模板缺失时快速失败 |
+| 可执行检查 | 本地检查配置 | `validation.checks.json` | 2026-05-04 | 使 Stage 2 `--run-checks` 闸门失败 |
+| Antseer 前端组件标准 | 外部 GitHub repo + 外部本地缓存 | `scripts/sync_antseer_components.sh` → `${XDG_CACHE_HOME:-~/.cache}/skill-creator-rick/antseer-components` | 2026-05-04 | 使用已有缓存并披露 commit；如果没有缓存则停止 |
 
 ## 验证证据
 
 | 检查项 | 命令 / 方法 | 结果 | 日期 |
 |---|---|---|---|
-| Frontmatter 校验 | `PYTHONDONTWRITEBYTECODE=1 python scripts/quick_validate.py .` | pass | 2026-04-29 |
-| 阶段校验脚本语法 | `PYTHONDONTWRITEBYTECODE=1 python -m py_compile scripts/*.py` | pass | 2026-04-29 |
-| Raw Stage 1 scaffold guard | 生成临时半成品包，并确认占位符未填完时 validation 必须失败 | pass | 2026-04-29 |
-| Stage 2 脚手架冒烟测试 | 原始 complete scaffold 必须在占位符填完前失败；填充示例值后 pass | pass | 2026-04-29 |
-| 可执行校验闸门 | `PYTHONDONTWRITEBYTECODE=1 python scripts/validate_shareable_skill.py . --stage complete --run-checks` | pass | 2026-04-29 |
-| 结构化审计报告 | `PYTHONDONTWRITEBYTECODE=1 python scripts/audit_skill.py . --stage complete --run-checks --format json` | pass | 2026-04-29 |
+| Frontmatter 校验 | `PYTHONDONTWRITEBYTECODE=1 python scripts/quick_validate.py .` | pass | 2026-05-04 |
+| 阶段校验脚本语法 | `PYTHONDONTWRITEBYTECODE=1 python -m py_compile scripts/*.py` | pass | 2026-05-04 |
+| Raw Stage 1 scaffold guard | 生成临时半成品包，并确认占位符未填完时 validation 必须失败 | pass | 2026-05-04 |
+| Stage 2 脚手架冒烟测试 | 原始 complete scaffold 必须在占位符填完前失败；填充示例值后 pass | pass | 2026-05-04 |
+| 可执行校验闸门 | `PYTHONDONTWRITEBYTECODE=1 python scripts/validate_shareable_skill.py . --stage complete --run-checks` | pass | 2026-05-04 |
+| 结构化审计报告 | `PYTHONDONTWRITEBYTECODE=1 python scripts/audit_skill.py . --stage complete --run-checks --format json` | pass | 2026-05-04 |
+| 发布边界检查 | 确认组件库 checkout、`.git`、`node_modules`、pycache、生成缓存未进入 package source | pass | 2026-05-04 |
 
 ## 示例请求
 

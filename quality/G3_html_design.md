@@ -8,6 +8,8 @@
 
 ## G3.1 · 视觉差异化登记(🔴 Critical)
 
+- [ ] 已执行 `scripts/sync_antseer_components.sh`，并记录外部缓存 commit
+- [ ] 已参考 `references/antseer-components-standard.md`，且未把组件库 checkout / `.git` / `node_modules` / demo 数据复制进本 Skill
 - [ ] `design-system/visual-registry.md` 已新增本 Skill 条目
 - [ ] 登记发生在 HTML 编码之前(不允许画完再登记)
 - [ ] 主色与所有已登记 Skill 至少 1 个维度(色相/明度/饱和度)显著不同
@@ -66,6 +68,8 @@
 
 | 症状 | 对策 |
 |---|---|
+| 未同步 antseer-components | 先执行 `scripts/sync_antseer_components.sh`，记录外部缓存 commit，再重跑 G3 |
+| 把组件库 node_modules / demo 数据复制进 Skill | 删除 vendored 缓存，只保留真实 Skill 源码和必要规范引用 |
 | 画完才登记 visual-registry | 回 S3 重新确认主色/字体/Hero,修改若撞脸的地方,重跑门禁 |
 | 硬编码颜色 | 全部改 CSS 变量,引 tokens |
 | 只画 happy path | 每个主组件补 loading / empty,Hero + 主图表补 error |

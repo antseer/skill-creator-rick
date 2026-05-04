@@ -24,14 +24,28 @@
 
 ## §1 开工前的视觉登记(必做)
 
+### Step 0:同步 Antseer 组件源
+
+生成或重构 Skill 前端前，先同步组件库并记录 commit：
+
+```bash
+bash /Users/rick/.claude/skills/skill-creator-rick/scripts/sync_antseer_components.sh
+```
+
+要求：
+- 参考 `${XDG_CACHE_HOME:-~/.cache}/skill-creator-rick/antseer-components` 的模块结构、组件 API、K 线 / marker / event rail / source footer 示例。
+- 不把组件库 checkout、`.git`、`node_modules` 或 demo/fixture 数据复制进本 Skill 发布包。
+- 如果 GitHub 不可达，只能使用已有外部缓存，并在 S3 记录缓存 commit。
+
 ### Step 1:查 visual-registry
 
 ```
-1. 读 design-system/visual-registry.md
-2. 看已登记 Skill 的主色/Display 字体/Hero 类型
-3. 在 design-system/color-pool.md 里选未被占用的主色
-4. 在 design-system/display-font-pool.md 里选未被占用的字体
-5. 选一个与已有 Skill 不同的 Hero 类型(军师/编辑部/实验室/控制台/仪表盘/...)
+1. 执行 scripts/sync_antseer_components.sh,记录外部缓存 commit
+2. 读 design-system/visual-registry.md
+3. 看已登记 Skill 的主色/Display 字体/Hero 类型
+4. 在 design-system/color-pool.md 里选未被占用的主色
+5. 在 design-system/display-font-pool.md 里选未被占用的字体
+6. 选一个与已有 Skill 不同的 Hero 类型(军师/编辑部/实验室/控制台/仪表盘/...)
 ```
 
 ### Step 2:登记本 Skill 条目
@@ -100,17 +114,19 @@ Hero 必须有结论(3 秒内可理解),不允许只放输入表单。
 ## §3 执行步骤总览
 
 ```
-1. 读 design-system/antseer-design-system.md
-2. 读 design-system/visual-registry.md,选未占主色 + 字体 + Hero 类型
-3. 在 visual-registry.md 登记本 Skill(先登记后画)
-4. 读 skill-prd.md,列出所有 L5 组件清单
-5. 按金字塔搭骨架:Hero → 中间可视化 → 信任层
-6. 按 PRD 附录 A 的字段 schema 做 mock 数据(用真实感的假数据)
-7. 每个组件实现 3+ 状态(happy/loading/empty/error/hover)
-8. 实现响应式(桌面 + 移动)
-9. 至少实现一个完整交互链路(输入 → 切换 → 重渲染)
-10. 检查 token 引用,全部颜色/字号/间距无硬编码
-11. 执行 G3 门禁
+1. 执行 scripts/sync_antseer_components.sh,记录 antseer-components 外部缓存 commit
+2. 读 references/antseer-components-standard.md
+3. 读 design-system/antseer-design-system.md
+4. 读 design-system/visual-registry.md,选未占主色 + 字体 + Hero 类型
+5. 在 visual-registry.md 登记本 Skill(先登记后画)
+6. 读 skill-prd.md,列出所有 L5 组件清单
+7. 按金字塔搭骨架:Hero → 中间可视化 → 信任层
+8. 按 PRD 附录 A 的字段 schema 做 mock 数据(用真实感的假数据)
+9. 每个组件实现 3+ 状态(happy/loading/empty/error/hover)
+10. 实现响应式(桌面 + 移动)
+11. 至少实现一个完整交互链路(输入 → 切换 → 重渲染)
+12. 检查 token 引用,全部颜色/字号/间距无硬编码
+13. 执行 G3 门禁
 ```
 
 ## §4 产出物
